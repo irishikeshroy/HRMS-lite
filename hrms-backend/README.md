@@ -107,6 +107,40 @@ Once the server is running, you can access the following:
 
 ---
 
+## 🚀 Cloud Deployment (e.g., Render, Railway)
+
+To deploy your backend to a production environment like **Render**, follow these steps:
+
+### 1. Push Code to GitHub
+Ensure all your local changes are pushed to your repository.
+
+### 2. Create a New Web Service
+- Log in to [Render.com](https://render.com/).
+- Click **New +** > **Web Service**.
+- Connect your GitHub repository.
+
+### 3. Configure Build & Start Commands
+> [!IMPORTANT]
+> You **MUST** set the **Root Directory** to `hrms-backend` in the Render settings. If you don't, Render will look for `requirements.txt` in the wrong place and the build will fail.
+
+- **Root Directory**: `hrms-backend`
+- **Runtime**: `Python 3`
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+
+### 4. Set Environment Variables
+In the **Environment** tab on Render, add the following:
+| Key | Value |
+| :--- | :--- |
+| `ENVIRONMENT` | `prod` |
+| `DATABASE_URL` | *Your PostgreSQL connection string (from Neon)* |
+| `PYTHON_VERSION` | `3.14.0` (or your preferred version) |
+
+### 5. Deployment Complete
+Render will provide a URL like `https://hrms-backend.onrender.com`. Use this URL as the `VITE_API_URL` in your frontend configuration.
+
+---
+
 ## 🏗️ Technical Details
 
 - **FastAPI**: Asynchronous API framework.
