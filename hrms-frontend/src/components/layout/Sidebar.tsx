@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import { Dashboard as DashboardIcon, People as PeopleIcon, AssignmentTurnedIn as AttendanceIcon } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';

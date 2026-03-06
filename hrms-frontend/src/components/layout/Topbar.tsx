@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Toolbar, Typography, AppBar, Avatar } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 
