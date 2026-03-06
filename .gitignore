@@ -1,0 +1,26 @@
+# Common ignores
+node_modules/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+# .env.*
+# !.env.example
+
+# IDEs
+.vscode/
+.idea/
+
+# Backend specific
+hrms-backend/venv/
+hrms-backend/__pycache__/
+hrms-backend/*.db
+
+# Frontend specific
+hrms-frontend/node_modules/
+hrms-frontend/dist/
