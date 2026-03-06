@@ -52,7 +52,12 @@ def mark_attendance(
         raise HTTPException(status_code=409, detail="Attendance already marked for this date")
         
     attendance = crud.create_attendance(db=db, attendance=attendance_in)
-    return attendance
+    # Enrich response for immediate consistency
+    return {
+        **attendance.__dict__,
+        "employee_code": employee.employee_id,
+        "full_name": employee.full_name
+    }
 
 @router.patch("/{attendance_id}", response_model=schemas.AttendanceResponse)
 def update_attendance_status(
@@ -65,9 +70,16 @@ def update_attendance_status(
     if not db_attendance:
         raise HTTPException(status_code=404, detail="Attendance record not found")
     
+    res = db_attendance
     if update_in.status:
-        return crud.update_attendance(db, db_attendance, update_in.status)
-    return db_attendance
+        res = crud.update_attendance(db, db_attendance, update_in.status)
+        
+    # Enrich response
+    return {
+        **res.__dict__,
+        "employee_code": res.employee.employee_id,
+        "full_name": res.employee.full_name
+    }
 
 @router.get("/{emp_id}", response_model=schemas.PaginatedAttendanceResponse)
 def get_employee_attendance(

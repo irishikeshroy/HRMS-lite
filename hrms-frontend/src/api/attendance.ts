@@ -5,6 +5,8 @@ export type AttendanceStatus = 'Present' | 'Absent';
 export interface Attendance {
     id: string;
     employee_id: string;
+    employee_code: string;
+    full_name: string;
     date: string;
     status: AttendanceStatus;
     created_at: string;

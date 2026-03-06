@@ -32,7 +32,11 @@ def get_attendance_paginated(
     status: Optional[str] = None,
 ) -> dict:
     """Return paginated attendance records with total count."""
-    query = db.query(Attendance).order_by(Attendance.date.desc(), Attendance.created_at.desc())
+    query = (
+        db.query(Attendance, Employee.employee_id.label("employee_code"), Employee.full_name)
+        .join(Employee, Attendance.employee_id == Employee.id)
+        .order_by(Attendance.date.desc(), Attendance.created_at.desc())
+    )
     if employee_id:
         query = query.filter(Attendance.employee_id == employee_id)
     if query_date:
@@ -45,7 +49,22 @@ def get_attendance_paginated(
         query = query.filter(Attendance.status == status)
 
     total = query.count()
-    items = query.offset((page - 1) * page_size).limit(page_size).all()
+    results = query.offset((page - 1) * page_size).limit(page_size).all()
+    
+    items = []
+    for att, code, name in results:
+        # Create a dictionary compatible with AttendanceResponse
+        item_dict = {
+            "id": att.id,
+            "employee_id": att.employee_id,
+            "date": att.date,
+            "status": att.status,
+            "created_at": att.created_at,
+            "employee_code": code,
+            "full_name": name
+        }
+        items.append(item_dict)
+        
     return {"total": total, "page": page, "page_size": page_size, "items": items}
 
 def create_attendance(db: Session, attendance: AttendanceCreate) -> Attendance:

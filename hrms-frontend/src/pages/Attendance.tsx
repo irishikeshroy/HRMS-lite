@@ -145,10 +145,10 @@ export default function AttendancePage() {
                                     : attendance.map(a => (
                                         <TableRow key={a.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
                                             <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.85rem', color: 'primary.light' }}>
-                                                {a.employee_id.slice(0, 8)}…
+                                                {a.employee_code}
                                             </TableCell>
                                             <TableCell sx={{ fontFamily: 'monospace' }}>
-                                                {new Date(a.date).toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                                                {new Date(a.date).toLocaleDateString('en-GB')}
                                             </TableCell>
                                             <TableCell>
                                                 <Chip
@@ -170,7 +170,7 @@ export default function AttendancePage() {
                                                 />
                                             </TableCell>
                                             <TableCell sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                                                {new Date(a.created_at).toLocaleString()}
+                                                {new Date(a.created_at).toLocaleString('en-GB')}
                                             </TableCell>
                                         </TableRow>
                                     ))

@@ -216,7 +216,7 @@ export default function EmployeeDetail() {
                                 <TableRow><TableCell colSpan={3} align="center" sx={{ py: 6 }}><Typography color="text.secondary">No attendance records found</Typography></TableCell></TableRow>
                             ) : attendance.map(a => (
                                 <TableRow key={a.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
-                                    <TableCell sx={{ fontFamily: 'monospace' }}>{new Date(a.date).toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</TableCell>
+                                    <TableCell sx={{ fontFamily: 'monospace' }}>{new Date(a.date).toLocaleDateString('en-GB')}</TableCell>
                                     <TableCell>
                                         <Chip icon={a.status === 'Present' ? <CheckCircle sx={{ fontSize: '14px !important' }} /> : <Cancel sx={{ fontSize: '14px !important' }} />}
                                             label={a.status} size="small"
@@ -231,7 +231,7 @@ export default function EmployeeDetail() {
                                                 }
                                             }} />
                                     </TableCell>
-                                    <TableCell sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.8rem' }}>{new Date(a.created_at).toLocaleString()}</TableCell>
+                                    <TableCell sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.8rem' }}>{new Date(a.created_at).toLocaleString('en-GB')}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

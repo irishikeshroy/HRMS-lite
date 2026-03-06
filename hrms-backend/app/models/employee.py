@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, Enum
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
@@ -14,4 +14,4 @@ class Employee(Base):
     full_name = Column(String(100), nullable=False)
     email = Column(String(150), unique=True, index=True, nullable=False)
     department = Column(String(80), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
