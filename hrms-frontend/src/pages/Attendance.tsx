@@ -1,15 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import {
-    Box, Card, Typography, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, TextField, MenuItem, Chip, Skeleton, Stack,
-    TablePagination, Pagination, Snackbar, Alert
-} from '@mui/material';
-import { CheckCircle, Cancel, CalendarMonth } from '@mui/icons-material';
-import { InputAdornment, IconButton } from '@mui/material';
+import { Snackbar, Alert } from '@mui/material';
 import type { Attendance } from '../api/attendance';
 import { getAttendance, updateAttendance } from '../api/attendance';
 
 const STATUS_OPTIONS = ['Present', 'Absent'];
+
+/* ── Skeleton placeholder ── */
+function Skeleton({ className = '' }: { className?: string }) {
+    return <div className={`skeleton ${className}`} />;
+}
 
 export default function AttendancePage() {
     const [attendance, setAttendance] = useState<Attendance[]>([]);
@@ -17,7 +16,6 @@ export default function AttendancePage() {
     const [loading, setLoading] = useState(true);
     const [filterDate, setFilterDate] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
-    // MUI TablePagination uses 0-indexed page; backend uses 1-indexed
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [snack, setSnack] = useState<{ open: boolean; msg: string; severity: 'success' | 'error' }>({ open: false, msg: '', severity: 'success' });
@@ -27,9 +25,9 @@ export default function AttendancePage() {
     const handleIconClick = () => {
         if (dateInputRef.current) {
             try {
-                // @ts-ignore - showPicker is modern but might not be in all TS types yet
+                // @ts-ignore
                 dateInputRef.current.showPicker();
-            } catch (e) {
+            } catch {
                 dateInputRef.current.focus();
             }
         }
@@ -40,7 +38,7 @@ export default function AttendancePage() {
         getAttendance({
             date: filterDate || undefined,
             status: filterStatus || undefined,
-            page: page + 1,         // backend is 1-indexed
+            page: page + 1,
             page_size: rowsPerPage,
         })
             .then(r => {
@@ -51,8 +49,7 @@ export default function AttendancePage() {
             .finally(() => setLoading(false));
     }, [filterDate, filterStatus, page, rowsPerPage]);
 
-    // Reset to first page when filters change
-    const handleFilterChange = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFilterChange = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setter(e.target.value);
         setPage(0);
     };
@@ -68,157 +65,206 @@ export default function AttendancePage() {
         }
     };
 
+    const totalPages = Math.ceil(total / rowsPerPage);
+    const startItem = total === 0 ? 0 : page * rowsPerPage + 1;
+    const endItem = Math.min((page + 1) * rowsPerPage, total);
+
+    // Generate page numbers for pagination
+    const getPageNumbers = () => {
+        const pages: number[] = [];
+        const maxVisible = 5;
+        let start = Math.max(0, page - Math.floor(maxVisible / 2));
+        const end = Math.min(totalPages, start + maxVisible);
+        if (end - start < maxVisible) start = Math.max(0, end - maxVisible);
+        for (let i = start; i < end; i++) pages.push(i);
+        return pages;
+    };
+
     return (
-        <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                <Box>
-                    <Typography variant="h5" fontWeight={700}>Attendance Records</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        {total} total records
-                    </Typography>
-                </Box>
-            </Stack>
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Attendance Records</h1>
+                    <p className="text-slate-500 mt-1">{total} total records</p>
+                </div>
+                <div className="flex items-center gap-4">
+                    {/* <div className="relative hidden md:block">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                        <input
+                            className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all w-64"
+                            placeholder="Search records..."
+                            type="text"
+                        />
+                    </div> */}
+                    {/* <button className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <span className="material-symbols-outlined">notifications</span>
+                    </button> */}
+                </div>
+            </div>
 
             {/* Filters */}
-            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-                <TextField
-                    size="small" type="date" label="Filter by Date"
-                    value={filterDate} onChange={handleFilterChange(setFilterDate)}
-                    InputLabelProps={{ shrink: true }}
-                    inputRef={dateInputRef}
-                    inputProps={{ max: new Date().toISOString().split('T')[0] }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <IconButton size="small" onClick={handleIconClick} sx={{ p: 0.5, ml: -0.5 }}>
-                                    <CalendarMonth sx={{ fontSize: 18, color: 'primary.main' }} />
-                                </IconButton>
-                            </InputAdornment>
-                        ),
-                    }}
-                    sx={{
-                        width: 220,
-                        '& input::-webkit-calendar-picker-indicator': {
-                            cursor: 'pointer',
-                        }
-                    }}
-                />
-                <TextField
-                    size="small" select label="Status"
-                    value={filterStatus} onChange={handleFilterChange(setFilterStatus)}
-                    sx={{ width: 150 }}
-                >
-                    <MenuItem value="">All Statuses</MenuItem>
-                    {STATUS_OPTIONS.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                </TextField>
-            </Stack>
+            <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex flex-col gap-1.5 flex-1 max-w-[240px]">
+                    <label className="text-xs font-bold text-slate-500 uppercase px-1">Filter by Date</label>
+                    <div className="relative group">
+                        <button type="button" onClick={handleIconClick} className="absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer">
+                            <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">event</span>
+                        </button>
+                        <input
+                            ref={dateInputRef}
+                            type="date"
+                            value={filterDate}
+                            onChange={handleFilterChange(setFilterDate)}
+                            max={new Date().toISOString().split('T')[0]}
+                            className="w-full pl-10 pr-4 py-3 bg-white/60 border border-slate-200 rounded-xl cursor-pointer hover:bg-white transition-all text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        />
+                    </div>
+                </div>
+                <div className="flex flex-col gap-1.5 flex-1 max-w-[200px]">
+                    <label className="text-xs font-bold text-slate-500 uppercase px-1">Status</label>
+                    <div className="relative group">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary group-hover:scale-110 transition-transform pointer-events-none">filter_list</span>
+                        <select
+                            value={filterStatus}
+                            onChange={handleFilterChange(setFilterStatus)}
+                            className="w-full pl-10 pr-8 py-3 bg-white/60 border border-slate-200 rounded-xl appearance-none cursor-pointer hover:bg-white transition-all text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        >
+                            <option value="">All Statuses</option>
+                            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                    </div>
+                </div>
+                {/* <div className="ml-auto flex items-end h-full pt-6">
+                    <button className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all cursor-pointer"
+                        style={{ boxShadow: '0 4px 14px rgba(76, 174, 130, 0.3)' }}>
+                        <span className="material-symbols-outlined text-xl">download</span>
+                        Export Data
+                    </button>
+                </div> */}
+            </div>
 
-            <Card>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: 'rgba(255,255,255,0.02)' }}>
+            {/* Table */}
+            <div className="glass-panel rounded-xl overflow-hidden flex flex-col shadow-xl">
+                <div className="overflow-x-auto flex-1">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="sticky top-0 bg-white/40 backdrop-blur-md z-10 border-b border-slate-200/50">
+                            <tr>
                                 {['Employee ID', 'Date', 'Status', 'Recorded At'].map(h => (
-                                    <TableCell key={h} sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{h}</TableCell>
+                                    <th key={h} className={`px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider ${h === 'Actions' ? 'text-right' : ''}`}>
+                                        {h}
+                                    </th>
                                 ))}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {loading
-                                ? Array.from({ length: rowsPerPage }).map((_, i) => (
-                                    <TableRow key={i} sx={{ height: 52 }}>
-                                        {Array.from({ length: 4 }).map((_, j) => (
-                                            <TableCell key={j} sx={{ py: 1 }}>
-                                                <Skeleton variant="text" height={20} />
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200/30">
+                            {loading ? (
+                                Array.from({ length: rowsPerPage }).map((_, i) => (
+                                    <tr key={i}>
+                                        <td className="px-6 py-4"><Skeleton className="h-5 w-20" /></td>
+                                        <td className="px-6 py-4"><Skeleton className="h-5 w-24" /></td>
+                                        <td className="px-6 py-4"><Skeleton className="h-6 w-16 rounded-full" /></td>
+                                        <td className="px-6 py-4"><Skeleton className="h-5 w-20" /></td>
+                                        {/* <td className="px-6 py-4"><Skeleton className="h-5 w-8 ml-auto" /></td> */}
+                                    </tr>
                                 ))
-                                : attendance.length === 0
-                                    ? (
-                                        <TableRow>
-                                            <TableCell colSpan={4} align="center" sx={{ py: 6 }}>
-                                                <Typography color="text.secondary">No attendance records found</Typography>
-                                            </TableCell>
-                                        </TableRow>
-                                    )
-                                    : attendance.map(a => (
-                                        <TableRow key={a.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
-                                            <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.85rem', color: 'primary.light' }}>
-                                                {a.employee_code}
-                                            </TableCell>
-                                            <TableCell sx={{ fontFamily: 'monospace' }}>
-                                                {new Date(a.date).toLocaleDateString('en-GB')}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    icon={a.status === 'Present'
-                                                        ? <CheckCircle sx={{ fontSize: '14px !important' }} />
-                                                        : <Cancel sx={{ fontSize: '14px !important' }} />}
-                                                    label={a.status}
-                                                    size="small"
-                                                    onClick={() => handleToggleStatus(a)}
-                                                    sx={{
-                                                        bgcolor: a.status === 'Present' ? 'rgba(67,233,123,0.15)' : 'rgba(255,101,132,0.15)',
-                                                        color: a.status === 'Present' ? '#43e97b' : '#ff6584',
-                                                        fontWeight: 600,
-                                                        cursor: 'pointer',
-                                                        '&:hover': {
-                                                            bgcolor: a.status === 'Present' ? 'rgba(67,233,123,0.25)' : 'rgba(255,101,132,0.25)',
-                                                        }
-                                                    }}
-                                                />
-                                            </TableCell>
-                                            <TableCell sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                                                {new Date(a.created_at).toLocaleString('en-GB')}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                            }
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            ) : attendance.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-16 text-center">
+                                        <div className="flex flex-col items-center">
+                                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                                                <span className="material-symbols-outlined text-3xl text-slate-300">event_busy</span>
+                                            </div>
+                                            <p className="text-slate-500 font-medium">No attendance records found</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                attendance.map(a => (
+                                    <tr key={a.id} className="hover:bg-primary/5 transition-colors">
+                                        <td className="px-6 py-4 font-semibold text-slate-700">{a.employee_code}</td>
+                                        <td className="px-6 py-4 text-slate-600">{new Date(a.date).toLocaleDateString('en-GB')}</td>
+                                        <td className="px-6 py-4">
+                                            <button
+                                                onClick={() => handleToggleStatus(a)}
+                                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold cursor-pointer transition-colors ${
+                                                    a.status === 'Present'
+                                                        ? 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+                                                        : 'bg-red-100 text-red-600 border border-red-200 hover:bg-red-200'
+                                                }`}
+                                            >
+                                                {a.status}
+                                            </button>
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-600 font-medium">
+                                            {new Date(a.created_at).toLocaleString('en-GB')}
+                                        </td>
+                                        {/* <td className="px-6 py-4 text-right">
+                                            <button className="text-slate-400 hover:text-primary transition-colors cursor-pointer">
+                                                <span className="material-symbols-outlined">more_vert</span>
+                                            </button>
+                                        </td> */}
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
 
-                {/* ── Custom Pagination Footer ── */}
-                <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{
-                    p: 2, borderTop: '1px solid', borderColor: 'divider', flexWrap: 'wrap', gap: 2
-                }}>
-                    <TablePagination
-                        component="div"
-                        count={total}
-                        page={page}
-                        onPageChange={(_, newPage) => setPage(newPage)}
-                        rowsPerPage={rowsPerPage}
-                        onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-                        rowsPerPageOptions={[5, 10, 25, 50]}
-                        labelRowsPerPage="Rows:"
-                        sx={{
-                            borderBottom: 0,
-                            color: 'text.secondary',
-                            '.MuiTablePagination-actions': { display: 'none' },
-                            '.MuiTablePagination-toolbar': { minHeight: 0, p: 0 }
-                        }}
-                    />
-                    <Pagination
-                        count={Math.ceil(total / rowsPerPage)}
-                        page={page + 1}
-                        onChange={(_, p) => setPage(p - 1)}
-                        size="small"
-                        color="primary"
-                        sx={{
-                            '& .MuiPaginationItem-root': {
-                                fontFamily: 'monospace',
-                                fontWeight: 600,
-                                fontSize: '0.75rem'
-                            }
-                        }}
-                    />
-                </Stack>
-            </Card>
+                {/* Pagination Footer */}
+                <div className="px-6 py-4 bg-white/20 backdrop-blur-sm border-t border-slate-200/50 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-slate-500 font-medium">Rows:</span>
+                            <select
+                                value={rowsPerPage}
+                                onChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+                                className="bg-transparent border border-slate-200 rounded px-2 py-0.5 text-sm focus:ring-primary focus:border-primary outline-none"
+                            >
+                                {[5, 10, 25, 50].map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                        </div>
+                        <span className="text-sm text-slate-500">{startItem}-{endItem} of {total}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={() => setPage(p => Math.max(0, p - 1))}
+                            disabled={page === 0}
+                            className="p-2 text-slate-400 disabled:cursor-not-allowed disabled:opacity-30 hover:text-slate-600 transition-colors cursor-pointer"
+                        >
+                            <span className="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        <div className="flex items-center gap-1">
+                            {getPageNumbers().map(p => (
+                                <button
+                                    key={p}
+                                    onClick={() => setPage(p)}
+                                    className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors cursor-pointer ${
+                                        p === page
+                                            ? 'bg-primary text-white shadow-sm'
+                                            : 'text-slate-600 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    {p + 1}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                            disabled={page >= totalPages - 1}
+                            className="p-2 text-slate-600 disabled:cursor-not-allowed disabled:opacity-30 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                        >
+                            <span className="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
+            {/* Snackbar (MUI) */}
             <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
                 <Alert severity={snack.severity} variant="filled" onClose={() => setSnack(s => ({ ...s, open: false }))}>{snack.msg}</Alert>
             </Snackbar>
-        </Box>
+        </div>
     );
 }

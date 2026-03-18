@@ -1,89 +1,56 @@
 import { createTheme } from '@mui/material/styles';
 
-declare module '@mui/material/styles' {
-    interface Theme {
-        custom: {
-            surface: string;
-            surface2: string;
-            codeBg: string;
-        };
-    }
-    interface ThemeOptions {
-        custom?: {
-            surface?: string;
-            surface2?: string;
-            codeBg?: string;
-        };
-    }
-}
-
-export const darkTheme = createTheme({
+// Minimal MUI theme — used only for Dialog, Snackbar, and form components.
+// The rest of the UI is styled with Tailwind CSS.
+export const muiTheme = createTheme({
     palette: {
-        mode: 'dark',
-        background: {
-            default: '#0a0a0f',
-            paper: '#111118',
-        },
+        mode: 'light',
         primary: {
-            main: '#6c63ff',
-            light: '#9e99fb',
-            dark: '#4c42d3',
+            main: '#4cae82',
+            light: '#6fc49e',
+            dark: '#3a8d68',
         },
         secondary: {
-            main: '#ff6584',
+            main: '#ef4444',
         },
         success: {
-            main: '#43e97b',
+            main: '#4cae82',
         },
         warning: {
-            main: '#f7971e',
+            main: '#f59e0b',
         },
-        text: {
-            primary: '#e8e8f0',
-            secondary: '#7a7a9a',
+        error: {
+            main: '#ef4444',
         },
-        divider: '#252530',
-    },
-    custom: {
-        surface: '#111118',
-        surface2: '#18181f',
-        codeBg: '#0d0d14',
+        background: {
+            default: '#f6f7f7',
+            paper: '#ffffff',
+        },
     },
     typography: {
-        fontFamily: '"DM Sans", "Helvetica", "Arial", sans-serif',
-        h1: { fontFamily: '"Syne", sans-serif', fontWeight: 800 },
-        h2: { fontFamily: '"Syne", sans-serif', fontWeight: 700 },
-        h3: { fontFamily: '"Syne", sans-serif', fontWeight: 700 },
-        h4: { fontFamily: '"Syne", sans-serif', fontWeight: 700 },
-        h5: { fontFamily: '"Syne", sans-serif', fontWeight: 700 },
-        h6: { fontFamily: '"Syne", sans-serif', fontWeight: 700 },
+        fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
         button: {
             textTransform: 'none',
             fontWeight: 600,
         },
     },
     components: {
+        MuiDialog: {
+            styleOverrides: {
+                paper: {
+                    borderRadius: 16,
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+                },
+            },
+        },
         MuiButton: {
             styleOverrides: {
                 root: {
-                    borderRadius: 8,
+                    borderRadius: 12,
                     padding: '8px 24px',
                 },
-            },
-        },
-        MuiCard: {
-            styleOverrides: {
-                root: {
-                    borderRadius: 12,
-                    border: '1px solid #252530',
-                    backgroundImage: 'none',
-                },
-            },
-        },
-        MuiPaper: {
-            styleOverrides: {
-                elevation1: {
-                    boxShadow: 'none',
+                contained: {
+                    boxShadow: '0 4px 14px rgba(76, 174, 130, 0.25)',
                 },
             },
         },

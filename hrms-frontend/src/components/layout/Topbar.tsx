@@ -1,7 +1,4 @@
-import { Box, Toolbar, Typography, AppBar, Avatar } from '@mui/material';
 import { useLocation } from 'react-router-dom';
-
-const drawerWidth = 260;
 
 export default function Topbar() {
     const location = useLocation();
@@ -18,31 +15,33 @@ export default function Topbar() {
     };
 
     return (
-        <AppBar
-            position="fixed"
-            elevation={0}
-            sx={{
-                width: { sm: `calc(100% - ${drawerWidth}px)` },
-                ml: { sm: `${drawerWidth}px` },
-                backgroundColor: 'rgba(10, 10, 15, 0.8)',
-                backdropFilter: 'blur(8px)',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-            }}
-        >
-            <Toolbar sx={{ justifyContent: 'space-between', minHeight: 72 }}>
-                <Typography variant="h5" noWrap component="div" sx={{ fontWeight: 700 }}>
-                    {getPageTitle()}
-                </Typography>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ textAlign: 'right' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Admin User</Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>HR Manager</Typography>
-                    </Box>
-                    <Avatar sx={{ bgcolor: 'secondary.main', width: 40, height: 40 }}>A</Avatar>
-                </Box>
-            </Toolbar>
-        </AppBar>
+        <header className="sticky top-0 z-10 glass-panel px-8 py-4 flex items-center justify-between">
+            <div>
+                <h2 className="text-xl font-bold tracking-tight text-slate-900">{getPageTitle()}</h2>
+            </div>
+            <div className="flex items-center gap-4">
+                {/* Search */}
+                <div className="relative hidden md:block">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+                    <input
+                        className="bg-slate-100/80 border-none rounded-full pl-10 pr-4 py-2 w-64 focus:ring-2 focus:ring-primary/50 text-sm transition-all outline-none"
+                        placeholder="Search..."
+                        type="text"
+                    />
+                </div>
+                {/* Notification */}
+                <button className="p-2.5 rounded-full hover:bg-slate-100 transition-colors">
+                    <span className="material-symbols-outlined text-slate-600">notifications</span>
+                </button>
+                {/* Settings */}
+                <button className="p-2.5 rounded-full hover:bg-slate-100 transition-colors">
+                    <span className="material-symbols-outlined text-slate-600">settings</span>
+                </button>
+                {/* Avatar */}
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm border-2 border-primary/20">
+                    A
+                </div>
+            </div>
+        </header>
     );
 }
